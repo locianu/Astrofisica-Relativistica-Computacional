@@ -156,12 +156,12 @@ for j in range(1):
              f = geodesic()
              
              # devia ser x_0 2x5 se for respeitar o range dos for
-             x_0 = [r, theta, p_r, p_theta, phi]
+             x_0 = np.array([[r, theta, p_r, p_theta, phi]])
              curve = np.copy(x_0)
-
+             
              k = 0
              Nk = 20000
-             
+
              while((R<r) and (r<radius_celestial_sphere) and (k<Nk)):
                   
                   # valores de coodenadas "limpos"
@@ -212,10 +212,10 @@ for j in range(1):
                   k = k + 1
                   print(f"raio = {r}")
 
-                  x = [r, theta, p_r, p_theta, phi]
+                  x = np.array([r, theta, p_r, p_theta, phi])
                   # isso aqui talvez dê problema no futuro, então testar com
-                  #curve[k][:] = x
-                  curve[k, :] = x
+                  #curve[k:] = x
+                  curve = np.vstack((curve, x))
 
              # transformando tudo pra coordenadas euclidianas e plotagem
 
