@@ -102,17 +102,17 @@ pi = math.pi
 
 # sinceramente eu não entendi essa parte do programa
 
-for j in range(1):
-        for i in range(1):
-             #h = window_height / 2 -(i - 1) * window_height / (resolution_height - 1)
-             #w = -window_width / 2 + (j - 1) * window_width / (resolution_width - 1)
-             h = window_height / 2 - i * window_height / (resolution_height - 1)
-             w = -window_width / 2 + j * window_width / (resolution_width - 1)
+for j in range(resolution_width):
+        for i in range(resolution_height):
+             h = window_height / 2 - (i - 1) * window_height / (resolution_height - 1)
+             w = -window_width / 2 + (j - 1) * window_width / (resolution_width - 1)
+             #h = window_height / 2 - i * window_height / (resolution_height - 1)
+             #w = -window_width / 2 + j * window_width / (resolution_width - 1)
 
              r = 70
              theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
              phi = 0
-             t_dot = 1
+             t_dot = 1             
 
              phi_dot = ((csc(theta) * w) / 
                         (sqrt((a**2 + r**2) * distance_from_window**2 + w**2 + h**2)))
@@ -219,17 +219,17 @@ for j in range(1):
 
              # transformando tudo pra coordenadas euclidianas e plotagem
 
-             n, m = curve.shape
-             A = a * np.ones(n, 1)
+             #n, m = curve.shape
+             #A = a * np.ones((n, 1))
 
              # por algum motivo, tem isso aqui no código original
              #PHIZ = np.ones(n, 1)
 
              def Boyer2Cart(r, theta, phi):
-                  B2C = [sqrt(r**2 + A**2) * sin(theta) * cos(phi),
-                         sqrt(r**2 + A**2) * sin(theta) * sin(phi),
-                         r * cos(theta)]
-                  return B2C
+                  x = sqrt(r**2 + a**2) * sin(theta) * cos(phi)
+                  y = sqrt(r**2 + a**2) * sin(theta) * sin(phi)
+                  z = r * cos(theta)
+                  return np.column_stack((x, y, z))
              
              cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 4])
              plt.plot(cart[:, 0], cart[:, 1], cart[:, 2])
