@@ -75,7 +75,7 @@ ax.set_box_aspect([1, 1, 1])
 
 # mostra a figura
 
-#plt.show()
+plt.show()
 
 # resoluções da tela, em pixels
 
@@ -125,15 +125,17 @@ for j in range(resolution_width):
                          * cos(theta) * distance_from_window)
                          / (sqrt(distance_from_window**2 + h**2 + w**2) 
                          * (a**2 + 2*r**2 + a**2 * cos(2*theta))))
-             #E = E(r, t_dot, phi_dot)
+
              E = (1 - R / r) * t_dot + (R * a * phi_dot) / r
              L = (-(R * a) / r * t_dot 
                   + (r**2 + a**2 + (R * a**2) / r) * phi_dot)
              
              # geodésicas, no código original elas são definidas DENTRO do loop de for, dá pra fazer o mesmo aqui? porque tanto E quanto L não são definidos até o momento em que geodesics() é definida
              
-             def geodesic():
+             def geodesic(): 
                def f(r, theta, p_r, p_theta):
+                    global E
+                    global L
                     f1 = (p_r * Delta(r)) / Sigma(r, theta)
                     f2 = (p_theta) / Sigma(r, theta)
                     f3 = (-(1 / (2 * Delta(r)**2 * Sigma(r, theta)**2)) 
@@ -155,7 +157,6 @@ for j in range(resolution_width):
              
              f = geodesic()
              
-             # devia ser x_0 2x5 se for respeitar o range dos for
              x_0 = np.array([[r, theta, p_r, p_theta, phi]])
              curve = np.copy(x_0)
              
