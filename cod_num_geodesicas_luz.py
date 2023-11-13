@@ -4,15 +4,16 @@ import math
 from mpl_toolkits.mplot3d import Axes3D
 
 
-# condições iniciais
+#dados e equações relevantes pra métrica
 
-G = 1
+G = 1 #constante gravitacional
 M = 1 #massa do buraco negro
-a = 0.6 #momento angular
-R = 2*G*M 
-radius_celestial_sphere = 80
-aDiskMin = 2*R
-aDiskMAx = 5*R
+a = 0.6 #momento angular por massa a = J (Mc)^-1, J é o momento angular, também chamado de "parâmetro de Kerr"
+c = 1 #velocidade da luz
+R = 2*G*M / c**2 #raio de Schwarzschild
+radius_celestial_sphere = 80 #raio da esfera celeste
+aDiskMin = 2*R #limite inferior do disco de acreção acho
+aDiskMAx = 5*R #limite superior
 
 # funções matemáticas
 
@@ -75,7 +76,7 @@ ax.set_box_aspect([1, 1, 1])
 
 # mostra a figura
 
-plt.show()
+#plt.show()
 
 # resoluções da tela, em pixels
 
@@ -84,14 +85,14 @@ resolution_width = 2
 
 # dimensões da janela observacional, não sei se é aplicável em python
 
-window_height = 0.00001
-window_width = (resolution_width / resolution_height) * window_height
-distance_from_window = -1.4e-4
+window_height = 0.00001 #h_P
+window_width = (resolution_width / resolution_height) * window_height #w_P
+distance_from_window = -1.4e-4 #d_P
 
 coords_no_aDisk = np.zeros((resolution_height, resolution_width, 3))
 coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
 
-# passo do runge-kunta
+# passo do runge-kunta 4
 
 #sts = 0.1
 stepsize = 0.1
@@ -100,85 +101,78 @@ stepsize = 0.1
 
 pi = math.pi
 
-# sinceramente eu não entendi essa parte do programa
-
 for j in range(resolution_width):
-        for i in range(resolution_height):
+        for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
+             #localização dos pixels na janela observacional
              h = window_height / 2 - (i - 1) * window_height / (resolution_height - 1)
              w = -window_width / 2 + (j - 1) * window_width / (resolution_width - 1)
-             #h = window_height / 2 - i * window_height / (resolution_height - 1)
-             #w = -window_width / 2 + j * window_width / (resolution_width - 1)
 
-             r = 70
+
+             #posição inicial da "câmera" e por consequinte das geodésicas (0, r(0), theta(0), phi(0)) 
+             #em coordenadas Boyer-Lindquist
+             r = 70 
              theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
              phi = 0
-             t_dot = 1             
-
+             t_dot = 1 
              phi_dot = ((csc(theta) * w) / 
-                        (sqrt((a**2 + r**2) * distance_from_window**2 + w**2 + h**2)))
-             p_r = (2 * Sigma(r, theta) * (h * (a**2 + r**2) * cos(theta) + r)
-                     + r * sqrt(a**2 + r**2) * sin(theta) * distance_from_window 
-                     / (sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 +2 
-                     * r**2 + a**2 * cos(2 * theta)) * Delta(r)))
-             p_theta = (2 * Sigma(r, theta) * 
-                        (-h * r * sin(theta) + sin(theta) + sqrt(a**2 + r**2)
-                         * cos(theta) * distance_from_window)
-                         / (sqrt(distance_from_window**2 + h**2 + w**2) 
-                         * (a**2 + 2*r**2 + a**2 * cos(2*theta))))
+                        (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
 
-             E = (1 - R / r) * t_dot + (R * a * phi_dot) / r
-             L = (-(R * a) / r * t_dot 
-                  + (r**2 + a**2 + (R * a**2) / r) * phi_dot)
+             #momento conjugado  
+             p_r = ((2 * Sigma(r, theta) * (r * sqrt(a**2 + r**2) * distance_from_window * sin(theta) + h * (a**2 + r**2) * cos(theta)))
+                    / (Delta(r) * sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 * cos(2 * theta) + a**2 * 2*r**2)))
+             p_theta = ((2 * Sigma(r, theta) * (sqrt(a**2 + r**2) * distance_from_window * cos(theta) - h * r * sin(theta))) 
+                    / sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 * cos(2 * theta) + a**2 * 2*r**2))
+
+             #quantias conservadas
+             E = (1 - R / r) * t_dot + (R * a * phi_dot) / r #energia do vetor de killing com respeito ao tempo t
+             L = (-(R * a) / r * t_dot + (r**2 + a**2 + (R * a**2) / r) * phi_dot) #momento angular do vetor de killing com respeito a phi
              
-             # geodésicas, no código original elas são definidas DENTRO do loop de for, dá pra fazer o mesmo aqui? porque tanto E quanto L não são definidos até o momento em que geodesics() é definida
+             # geodésicas, sistema de EDOs de primeira ordem
              
-             def geodesic(): 
+             def geodesic():
                def f(r, theta, p_r, p_theta):
                     global E
                     global L
                     f1 = (p_r * Delta(r)) / Sigma(r, theta)
                     f2 = (p_theta) / Sigma(r, theta)
-                    f3 = (-(1 / (2 * Delta(r)**2 * Sigma(r, theta)**2)) 
-                          * (Sigma(r, theta) * (-E * Delta(r) * (a * R * (-2 * L + a*E*sin(theta)**2) 
-                          + 2 * r * E * Sigma(r, theta)) + (a * (a * L**2 - 2 * L * r * R * E 
-                          + a * r * R * E**2 * sin(theta)**2) + p_r**2 * Delta(r)**2 +(a**2 + r**2) 
-                          * E**2 * Sigma(r, theta)) * dDeltadr(r)) + Delta(r)
-                          * (a * (L * (a * L - 2 * r * R * E) + a * r * R * E**2 * sin(theta)**2)
-                          - Delta(r) * (p_theta**2 + L**2 * csc(theta)**2 + p_r**2 * Delta(r))) * dSigmadr(r)))
-                    f4 = (-(1 / (2 * Delta(r) * Sigma(r, theta)**2)) * (-2 * sin(theta) * 
-                         (a**2 * r * R * E**2 * cos(theta) + L**2 * cot(theta) * csc(theta)**3 * Delta(r)) 
-                          * Sigma(r, theta) + (a * (L * (a * L - 2 * r * R * E) + a * r * R * E**2 
-                          * sin(theta)**2) - Delta(r) * (p_theta**2 + L**2 * csc(theta)**2 + p_r**2 
-                          * Delta(r))) * dSigmadtheta(theta)))
-                    f5 = ((a * (-a * L + r * R * E) + L * csc(theta)**2 * Delta(r)) 
-                          / (Delta(r) * Sigma(r, theta)))
-                    return [f1, f2, f3, f4, f5]
+                    f3 = ((a * ( -a * L + r * R * E) + L * csc(theta)**2 * Delta(r)) / (Delta(r) * Sigma(r,theta)))
+                    f4 = (- (1 / (2 * Delta(r)**2 * Sigma(r,theta)**2)) * (Sigma(r,theta) 
+                         * (-E * Delta(r) * (a * R * ( -2 * L + a * E * sin(theta)**2) 
+                         + 2 * r * E * Sigma(r,theta)) + (a * (a * L**2 - 2 * L * r * R * E + a * r * R * E**2 
+                         * sin(theta)**2) + p_r ** 2 * Delta(r)**2 + (a**2 + r**2) * E**2 * Sigma(r,theta)) 
+                         * dDeltadr(r)) + Delta(r) * (a * (L * (a * L - 2 * r * R * E) + a * r * R * E**2 * sin(theta)**2) 
+                         - Delta(r) * (p_theta**2 + L**2 * csc(theta)**2 + p_r**2 * Delta(r))) * dSigmadr(r)))
+                    f5 = (- (1 / (2 * Delta(r) * Sigma(r,theta)**2)) * (-2 * sin(theta) * (a**2 * r * R * E**2 * cos(theta)
+                         + L**2 * cot(theta) * csc(theta)**3 * Delta(r)) * Sigma(r,theta) + (a * (L * (a * L - 2 * r * R * E) 
+                         + a * r * R * E**2 * sin(theta)**2) - Delta(r) * (p_theta**2 + L**2 * csc(theta)**2 + p_r**2 * Delta(r))) * dSigmadtheta(theta)))
+                    return [f1,f2,f3,f4,f5]
                return f
-             
+
              f = geodesic()
              
-             x_0 = np.array([[r, theta, p_r, p_theta, phi]])
+             # devia ser x_0 2x5 se for respeitar o range dos for
+             x_0 = np.array([[r, theta, phi, p_r, p_theta]])
+             print(x_0)
              curve = np.copy(x_0)
              
              k = 0
              Nk = 20000
 
-             while((R<r) and (r<radius_celestial_sphere) and (k<Nk)):
+             while((R < curve[k][0]) and (curve[k][0] < radius_celestial_sphere) and (k < Nk)):
                   
                   # valores de coodenadas "limpos"
                   
                   curve[k][1] = curve[k][1] % (2 * pi)
-                  curve[k][4] = curve[k][4] % (2 * pi)
+                  curve[k][2] = curve[k][2] % (2 * pi)
                   
                   if curve[k][1] > pi:
                        curve[k][1] = 2 * pi - curve[k][1]
-                       curve[k][4] = (pi + curve[k][4]) % (2 * pi)
-                      
-                  theta = curve[k][1]
+                       curve[k][2] = (pi + curve[k][2]) % (2 * pi)
 
                   # runge-kutta
-
-                  step = min([stepsize*Delta(r), stepsize])
+                  #se der erro, provável que seja aqui primeiro
+                  step = min(stepsize*Delta(r), stepsize)
+                  
                   
                   k1 = step * f(r, theta, p_r, p_theta)[0]
                   m1 = step * f(r, theta, p_r, p_theta)[1]
@@ -212,23 +206,23 @@ for j in range(resolution_width):
 
                   k = k + 1
                   print(f"raio = {r}")
+                  print(f"iteração = {k}")
 
-                  x = np.array([r, theta, p_r, p_theta, phi])
-                  # isso aqui talvez dê problema no futuro, então testar com
-                  #curve[k:] = x
-                  curve = np.vstack((curve, x))
+                  x_att = np.array([[r,theta,phi,p_r,p_theta]])
+                  print(f"x_att = {x_att}")
+                  curve = np.append(curve, x_att, axis=0)
 
              # transformando tudo pra coordenadas euclidianas e plotagem
 
-             #n, m = curve.shape
-             #A = a * np.ones((n, 1))
+             n, m = curve.shape
+             A = a * np.ones((n, 1))
 
              # por algum motivo, tem isso aqui no código original
              #PHIZ = np.ones(n, 1)
 
-             def Boyer2Cart(r, theta, phi):
-                  x = sqrt(r**2 + a**2) * sin(theta) * cos(phi)
-                  y = sqrt(r**2 + a**2) * sin(theta) * sin(phi)
+             def Boyer2Cart(r, theta, phi, A):
+                  x = sqrt(r**2 + A**2) * sin(theta) * cos(phi)
+                  y = sqrt(r**2 + A**2) * sin(theta) * sin(phi)
                   z = r * cos(theta)
                   return np.column_stack((x, y, z))
              
@@ -236,4 +230,3 @@ for j in range(resolution_width):
              plt.plot(cart[:, 0], cart[:, 1], cart[:, 2])
              plt.show()
 
-             
