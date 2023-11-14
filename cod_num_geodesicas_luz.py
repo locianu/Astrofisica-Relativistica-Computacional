@@ -12,27 +12,27 @@ a = 0.6 #momento angular por massa a = J (Mc)^-1, J é o momento angular, també
 c = 1 #velocidade da luz
 R = 2*G*M / c**2 #raio de Schwarzschild
 radius_celestial_sphere = 80 #raio da esfera celeste
-aDiskMin = 2*R #limite inferior do disco de acreção acho
+aDiskMin = 2*R #limite inferior do disco de acreção
 aDiskMAx = 5*R #limite superior
 
 # funções matemáticas
 
 def sin(theta):
-     return math.sin(theta)
+     return np.sin(theta)
 
 def cos(theta):
-     return math.cos(theta)
+     return np.cos(theta)
 
 def csc(theta):
-     return 1 / math.sin(theta)
+     return 1 / np.sin(theta)
 
 def sqrt(theta):
-     return math.sqrt(theta)
+     return np.sqrt(theta)
 
 def tan(theta):
-     return math.tan(theta)
+     return np.tan(theta)
 def cot(theta):
-     return 1 / math.tan(theta)
+     return 1 / np.tan(theta)
 
 # funções da métrica
 
@@ -51,37 +51,19 @@ def Delta(r):
 def dDeltadr(r):
     return 2 * r - R
 
+# conversão de coordenadas
 
-# plotagem
-# cria uma figura 3D
+def Boyer2Cart(r, theta, phi):
+     x = sqrt(r**2 + a**2) * sin(theta) * cos(phi)
+     y = sqrt(r**2 + a**2) * sin(theta) * sin(phi)
+     z = r * cos(theta)
+     return np.column_stack((x, y, z))
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-# cria uma grade de pontos em uma esfera
-
-u = np.linspace(0, 2 * np.pi, 100)
-v = np.linspace(0, np.pi, 100)
-x = R * np.outer(np.cos(u), np.sin(v))
-y = R * np.outer(np.sin(u), np.sin(v))
-z = R * np.outer(np.ones(np.size(u)), np.cos(v))
-
-# plota a esfera
-
-ax.plot_surface(x, y, z, color='black')
-
-# configura a proporção dos eixos para serem iguais
-
-ax.set_box_aspect([1, 1, 1])
-
-# mostra a figura
-
-#plt.show()
 
 # resoluções da tela, em pixels
 
-resolution_height = 2
-resolution_width = 2
+resolution_height = 4
+resolution_width = 4
 
 # dimensões da janela observacional, não sei se é aplicável em python
 
@@ -101,27 +83,32 @@ stepsize = 0.1
 
 pi = math.pi
 
+# lista vazia para adicionar as curvas
+
+all_curves = []
+
 for j in range(resolution_width):
         for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
-             #localização dos pixels na janela observacional
+          #localização dos pixels na janela observacional
              h = window_height / 2 - (i - 1) * window_height / (resolution_height - 1)
              w = -window_width / 2 + (j - 1) * window_width / (resolution_width - 1)
 
 
              #posição inicial da "câmera" e por consequinte das geodésicas (0, r(0), theta(0), phi(0)) 
              #em coordenadas Boyer-Lindquist
-             r = 70 
+             r = 70
              theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
              phi = 0
              t_dot = 1 
-             phi_dot = ((csc(theta) * w) / 
-                        (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
+             phi_dot = ((csc(theta) * w) / (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
 
              #momento conjugado  
-             p_r = ((2 * Sigma(r, theta) * (r * sqrt(a**2 + r**2) * distance_from_window * sin(theta) + h * (a**2 + r**2) * cos(theta)))
-                    / (Delta(r) * sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 * cos(2 * theta) + a**2 * 2*r**2)))
-             p_theta = ((2 * Sigma(r, theta) * (sqrt(a**2 + r**2) * distance_from_window * cos(theta) - h * r * sin(theta))) 
-                    / sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 * cos(2 * theta) + a**2 * 2*r**2))
+             p_r = ((2 * Sigma(r,theta) * (h * (a**2 + r**2) * cos(theta) + r * sqrt(a**2 + r**2) * sin(theta) * distance_from_window))
+                    / (sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 + 2 * r**2 + a**2 * cos(2 * theta)) * Delta(r)))
+             p_theta = ((2 * Sigma(r,theta) * (-h * r * sin(theta) + sqrt(a**2 + r**2) * cos(theta) * distance_from_window))
+                    / (sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 + 2 * r**2 + a**2 * cos(2 * theta))))
+             
+             curve = np.array([[r, theta, phi, p_r, p_theta]])
 
              #quantias conservadas
              E = (1 - R / r) * t_dot + (R * a * phi_dot) / r #energia do vetor de killing com respeito ao tempo t
@@ -150,15 +137,10 @@ for j in range(resolution_width):
 
              f = geodesic()
              
-             # devia ser x_0 2x5 se for respeitar o range dos for
-             x_0 = np.array([[r, theta, phi, p_r, p_theta]])
-             print(x_0)
-             curve = np.copy(x_0)
-             
              k = 0
              Nk = 20000
 
-             while((R < curve[k][0]) and (curve[k][0] < radius_celestial_sphere) and (k < Nk)):
+             while((R < r) and (r < radius_celestial_sphere) and (k < Nk)):
                   
                   # valores de coodenadas "limpos"
                   
@@ -168,12 +150,12 @@ for j in range(resolution_width):
                   if curve[k][1] > pi:
                        curve[k][1] = 2 * pi - curve[k][1]
                        curve[k][2] = (pi + curve[k][2]) % (2 * pi)
+                  
+                  theta = curve[k][1]
 
                   # runge-kutta
-                  #se der erro, provável que seja aqui primeiro
-                  step = min(stepsize*Delta(r), stepsize)
-                  
-                  
+                  step = min([stepsize*Delta(r), stepsize])
+                                    
                   k1 = step * f(r, theta, p_r, p_theta)[0]
                   m1 = step * f(r, theta, p_r, p_theta)[1]
                   n1 = step * f(r, theta, p_r, p_theta)[2]
@@ -203,30 +185,44 @@ for j in range(resolution_width):
                   p_r = p_r + (n1 + (2 * n2) + ( 2 * n3) + n4) / 6
                   p_theta = p_theta + (s1 + (2 * s2) + (2 * s3) + s4) / 6
                   phi = phi + (v1 + (2 * v2) + (2 * v3) + v4) / 6
-
+                  
                   k = k + 1
-                  print(f"raio = {r}")
-                  print(f"iteração = {k}")
 
                   x_att = np.array([[r,theta,phi,p_r,p_theta]])
-                  print(f"x_att = {x_att}")
-                  curve = np.append(curve, x_att, axis=0)
+                  #print(f"x_att = {x_att}")
+                  #curve = np.append(curve, x_att, axis=0)
+                  curve = np.vstack((curve, x_att))
 
-             # transformando tudo pra coordenadas euclidianas e plotagem
 
-             n, m = curve.shape
-             A = a * np.ones((n, 1))
+             # adiciona na lista
+             all_curves.append(curve)
 
-             # por algum motivo, tem isso aqui no código original
-             #PHIZ = np.ones(n, 1)
+# plotagem
+# cria uma figura 3D
 
-             def Boyer2Cart(r, theta, phi, A):
-                  x = sqrt(r**2 + A**2) * sin(theta) * cos(phi)
-                  y = sqrt(r**2 + A**2) * sin(theta) * sin(phi)
-                  z = r * cos(theta)
-                  return np.column_stack((x, y, z))
-             
-             cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 4])
-             plt.plot(cart[:, 0], cart[:, 1], cart[:, 2])
-             plt.show()
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+# cria uma grade de pontos em uma esfera
+
+u = np.linspace(0, 2 * np.pi, 100)
+v = np.linspace(0, np.pi, 100)
+x = R * np.outer(np.cos(u), np.sin(v))
+y = R * np.outer(np.sin(u), np.sin(v))
+z = R * np.outer(np.ones(np.size(u)), np.cos(v))
+
+# plota a esfera
+
+ax.plot_surface(x, y, z, color='black', alpha = 1)
+
+# configura a proporção dos eixos para serem iguais
+
+ax.set_box_aspect([1, 1, 1])
+
+# mostra a figura            
+cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 4])
+for curve in all_curves:
+    ax.plot3D(curve[:, 0], curve[:, 1], curve[:, 2])
+plt.savefig("curvinhas.png")
+plt.show()
 
