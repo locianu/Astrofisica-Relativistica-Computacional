@@ -1,64 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+from geodes_classes import metrica #classe que eu criei pra armazenar as funções da métrica
 from mpl_toolkits.mplot3d import Axes3D
 
+#definindo pi para facilitar a vida
 
-#dados e equações relevantes pra métrica
-
-G = 1 #constante gravitacional
-M = 1 #massa do buraco negro
-a = 0.6 #momento angular por massa a = J (Mc)^-1, J é o momento angular, também chamado de "parâmetro de Kerr"
-c = 1 #velocidade da luz
-R = 2*G*M / c**2 #raio de Schwarzschild
-radius_celestial_sphere = 80 #raio da esfera celeste
-aDiskMin = 2*R #limite inferior do disco de acreção
-aDiskMAx = 5*R #limite superior
-
-# funções matemáticas
-
-def sin(theta):
-     return np.sin(theta)
-
-def cos(theta):
-     return np.cos(theta)
-
-def csc(theta):
-     return 1 / np.sin(theta)
-
-def sqrt(theta):
-     return np.sqrt(theta)
-
-def tan(theta):
-     return np.tan(theta)
-def cot(theta):
-     return 1 / np.tan(theta)
-
-# funções da métrica
-
-def Sigma(r,theta):
-    return r**2 + a**2 * (cos(theta))**2
-
-def dSigmadr(r):
-    return 2 * r
-
-def dSigmadtheta(theta):
-    return -2 * a**2 * cos(theta) * sin(theta)
-
-def Delta(r):
-    return r**2 - R * r + a**2
-
-def dDeltadr(r):
-    return 2 * r - R
-
-# conversão de coordenadas
-
-def Boyer2Cart(r, theta, phi):
-     x = sqrt(r**2 + a**2) * sin(theta) * cos(phi)
-     y = sqrt(r**2 + a**2) * sin(theta) * sin(phi)
-     z = r * cos(theta)
-     return np.column_stack((x, y, z))
-
+pi = math.pi
 
 # resoluções da tela, em pixels
 
@@ -71,17 +19,14 @@ window_height = 0.00001 #h_P
 window_width = (resolution_width / resolution_height) * window_height #w_P
 distance_from_window = -1.4e-4 #d_P
 
+"""
 coords_no_aDisk = np.zeros((resolution_height, resolution_width, 3))
 coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
+"""
 
 # passo do runge-kunta 4
 
-#sts = 0.1
 stepsize = 0.1
-
-#definindo pi para facilitar a vida
-
-pi = math.pi
 
 # lista vazia para adicionar as curvas
 
