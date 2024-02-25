@@ -85,7 +85,7 @@ pi = math.pi
 
 # lista vazia para adicionar as curvas
 
-all_curves = []
+all_curves = [[]]
 
 for j in range(resolution_width):
         for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
@@ -118,8 +118,6 @@ for j in range(resolution_width):
              
              def geodesic():
                def f(r, theta, p_r, p_theta):
-                    global E
-                    global L
                     f1 = (p_r * Delta(r)) / Sigma(r, theta)
                     f2 = (p_theta) / Sigma(r, theta)
                     f3 = ((a * ( -a * L + r * R * E) + L * csc(theta)**2 * Delta(r)) / (Delta(r) * Sigma(r,theta)))
@@ -196,7 +194,6 @@ for j in range(resolution_width):
 
              # adiciona na lista
              all_curves.append(curve)
-
 # plotagem
 # cria uma figura 3D
 
@@ -207,24 +204,22 @@ ax = fig.add_subplot(111, projection='3d')
 
 u = np.linspace(0, 2 * np.pi, 100)
 v = np.linspace(0, np.pi, 100)
-x = R * np.outer(np.cos(u), np.sin(v))
-y = R * np.outer(np.sin(u), np.sin(v))
-z = R * np.outer(np.ones(np.size(u)), np.cos(v))
+u, v = np.meshgrid(u, v)
 
+x = R * np.cos(u) * np.sin(v)
+y = R * np.sin(u) * np.sin(v)
+z = R * np.cos(v)
 # plota a esfera
 
 ax.plot_surface(x, y, z, color='black', alpha = 1)
 
 # configura a proporção dos eixos para serem iguais
 
-ax.set_box_aspect([1, 1, 1])
-#plt.axis('equal', 'box')
-
+ax.set_box_aspect([1,1,1])
 
 # mostra a figura            
-cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 4])
+cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 2])
 for curve in all_curves:
-    ax.plot3D(curve[:, 0], curve[:, 1], curve[:, 2])
-plt.savefig("curvinhas.png")
+     ax.plot3D(cart[:, 0], cart[:, 1], cart[:, 2])
 plt.show()
 
