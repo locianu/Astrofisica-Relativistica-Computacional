@@ -85,7 +85,7 @@ pi = math.pi
 
 # lista vazia para adicionar as curvas
 
-all_curves = [[]]
+all_curves = []
 
 for j in range(resolution_width):
         for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
@@ -97,7 +97,7 @@ for j in range(resolution_width):
              #posição inicial da "câmera" e por consequinte das geodésicas (0, r(0), theta(0), phi(0)) 
              #em coordenadas Boyer-Lindquist
              r = 70
-             theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
+             theta = pi / 2# deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
              phi = 0
              t_dot = 1 
              phi_dot = ((csc(theta) * w) / (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
@@ -138,7 +138,7 @@ for j in range(resolution_width):
              k = 0
              Nk = 20000
 
-             while((R < r) and (r < radius_celestial_sphere) and (k < Nk)):
+             while((R < curve[k, 0]) and (curve[k, 0] < radius_celestial_sphere) and (k < Nk)):
                   
                   # valores de coodenadas "limpos"
                   
@@ -187,13 +187,15 @@ for j in range(resolution_width):
                   k = k + 1
 
                   x_att = np.array([[r,theta,phi,p_r,p_theta]])
-                  #print(f"x_att = {x_att}")
-                  #curve = np.append(curve, x_att, axis=0)
                   curve = np.vstack((curve, x_att))
-
+             """n, m = curve.shape
+             A = a * np.ones((n, 1))
+             """
+             # transforma em coordenadas cartesianas  
+             cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 2])
 
              # adiciona na lista
-             all_curves.append(curve)
+             all_curves.append(cart)
 # plotagem
 # cria uma figura 3D
 
@@ -215,11 +217,11 @@ ax.plot_surface(x, y, z, color='black', alpha = 1)
 
 # configura a proporção dos eixos para serem iguais
 
+plt.axis('equal')
 ax.set_box_aspect([1,1,1])
 
-# mostra a figura            
-cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 2])
+# mostra a figura
 for curve in all_curves:
-     ax.plot3D(cart[:, 0], cart[:, 1], cart[:, 2])
+     ax.plot3D(curve[:, 0], curve[:, 1], curve[:, 2])
 plt.show()
 
