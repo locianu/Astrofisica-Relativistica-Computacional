@@ -15,6 +15,10 @@ radius_celestial_sphere = 80 #raio da esfera celeste
 aDiskMin = 2*R #limite inferior do disco de acreção
 aDiskMAx = 5*R #limite superior
 
+#definindo pi para facilitar a vida
+
+pi = math.pi
+
 # funções matemáticas
 
 def sin(theta):
@@ -30,23 +34,30 @@ def sqrt(theta):
      return np.sqrt(theta)
 
 def tan(theta):
-     return np.tan(theta)
+     if theta != pi / 2:
+          return np.tan(theta)
+     else:
+          print("Invalid vector")
+
 def cot(theta):
-     return 1 / np.tan(theta)
+     if theta != 0:
+          return 1 / np.tan(theta)
+     else:
+          print("Invalid vector")
 
 # funções da métrica
 
 def Sigma(r,theta):
-    return r**2 + a**2 * (cos(theta))**2
+    return r**2 + (a**2) * (cos(theta))**2
 
 def dSigmadr(r):
     return 2 * r
 
 def dSigmadtheta(theta):
-    return -2 * a**2 * cos(theta) * sin(theta)
+    return -2 * (a**2) * cos(theta) * sin(theta)
 
 def Delta(r):
-    return r**2 - R * r + a**2
+    return (r**2) - R * r + (a**2)
 
 def dDeltadr(r):
     return 2 * r - R
@@ -65,23 +76,19 @@ def Boyer2Cart(r, theta, phi):
 resolution_height = 4
 resolution_width = 4
 
-# dimensões da janela observacional, não sei se é aplicável em python
+# dimensões da janela observacional
 
 window_height = 0.00001 #h_P
 window_width = (resolution_width / resolution_height) * window_height #w_P
 distance_from_window = -1.4e-4 #d_P
 
+# coordenadas para mapeamento
 coords_no_aDisk = np.zeros((resolution_height, resolution_width, 3))
 coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
 
 # passo do runge-kunta 4
 
-#sts = 0.1
 stepsize = 0.1
-
-#definindo pi para facilitar a vida
-
-pi = math.pi
 
 # lista vazia para adicionar as curvas
 
@@ -90,14 +97,18 @@ all_curves = []
 for j in range(resolution_width):
         for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
           #localização dos pixels na janela observacional
-             h = window_height / 2 - (i - 1) * window_height / (resolution_height - 1)
-             w = -window_width / 2 + (j - 1) * window_width / (resolution_width - 1)
+             if (j<(resolution_width / 2 - 0.01 * resolution_width)):
+               h = (window_height / 2) - (i - 1) * window_height / (resolution_height - 1)
+               w = (-window_width / 2) + (j - 1) * window_width / (resolution_width - 1)
+             else:
+               h = (window_height / 2) - (i - 1) * window_height / (resolution_height - 1)
+               w = (-window_width / 2) + (0.01 * window_width) + (j - 1) * window_width / (resolution_width - 1)
 
 
              #posição inicial da "câmera" e por consequinte das geodésicas (0, r(0), theta(0), phi(0)) 
              #em coordenadas Boyer-Lindquist
              r = 70
-             theta = pi / 2# deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
+             theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
              phi = 0
              t_dot = 1 
              phi_dot = ((csc(theta) * w) / (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
@@ -138,7 +149,7 @@ for j in range(resolution_width):
              k = 0
              Nk = 20000
 
-             while((R < curve[k, 0]) and (curve[k, 0] < radius_celestial_sphere) and (k < Nk)):
+             while((R < curve[k][0]) and (curve[k][0] < radius_celestial_sphere) and (k < Nk)):
                   
                   # valores de coodenadas "limpos"
                   
@@ -188,9 +199,7 @@ for j in range(resolution_width):
 
                   x_att = np.array([[r,theta,phi,p_r,p_theta]])
                   curve = np.vstack((curve, x_att))
-             """n, m = curve.shape
-             A = a * np.ones((n, 1))
-             """
+
              # transforma em coordenadas cartesianas  
              cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 2])
 
@@ -201,6 +210,10 @@ for j in range(resolution_width):
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
+
+# mostra a figura
+for curve in all_curves:
+     ax.plot3D(curve[:, 0], curve[:, 1], curve[:, 2])
 
 # cria uma grade de pontos em uma esfera
 
@@ -220,8 +233,6 @@ ax.plot_surface(x, y, z, color='black', alpha = 1)
 plt.axis('equal')
 ax.set_box_aspect([1,1,1])
 
-# mostra a figura
-for curve in all_curves:
-     ax.plot3D(curve[:, 0], curve[:, 1], curve[:, 2])
+
 plt.show()
 
