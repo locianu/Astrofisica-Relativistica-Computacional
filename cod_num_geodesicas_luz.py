@@ -65,10 +65,11 @@ def dDeltadr(r):
 # conversão de coordenadas
 
 def Boyer2Cart(r, theta, phi):
-     x = sqrt(r**2 + a**2) * sin(theta) * cos(phi)
-     y = sqrt(r**2 + a**2) * sin(theta) * sin(phi)
+     A = a
+     x = sqrt(r**2 + A**2) * sin(theta) * cos(phi)
+     y = sqrt(r**2 + A**2) * sin(theta) * sin(phi)
      z = r * cos(theta)
-     return np.column_stack((x, y, z))
+     return np.array([x, y, z])
 
 
 # resoluções da tela, em pixels
@@ -129,19 +130,19 @@ for j in range(resolution_width):
              
              def geodesic():
                def f(r, theta, p_r, p_theta):
-                    f1 = (p_r * Delta(r)) / Sigma(r, theta)
-                    f2 = (p_theta) / Sigma(r, theta)
-                    f3 = ((a * ( -a * L + r * R * E) + L * csc(theta)**2 * Delta(r)) / (Delta(r) * Sigma(r,theta)))
-                    f4 = (- (1 / (2 * Delta(r)**2 * Sigma(r,theta)**2)) * (Sigma(r,theta) 
+                    f1 = (p_r * Delta(r)) / Sigma(r, theta) #ok
+                    f2 = (p_theta) / Sigma(r, theta) #ok
+                    f3 = ((a * ( -a * L + r * R * E) + (L * csc(theta)**2) * Delta(r)) / (Delta(r) * Sigma(r,theta)))#ok
+                    f4 = (- (1 / ((2 * Delta(r)**2) * Sigma(r,theta)**2)) * (Sigma(r,theta) 
                          * (-E * Delta(r) * (a * R * ( -2 * L + a * E * sin(theta)**2) 
-                         + 2 * r * E * Sigma(r,theta)) + (a * (a * L**2 - 2 * L * r * R * E + a * r * R * E**2 
-                         * sin(theta)**2) + p_r ** 2 * Delta(r)**2 + (a**2 + r**2) * E**2 * Sigma(r,theta)) 
-                         * dDeltadr(r)) + Delta(r) * (a * (L * (a * L - 2 * r * R * E) + a * r * R * E**2 * sin(theta)**2) 
-                         - Delta(r) * (p_theta**2 + L**2 * csc(theta)**2 + p_r**2 * Delta(r))) * dSigmadr(r)))
-                    f5 = (- (1 / (2 * Delta(r) * Sigma(r,theta)**2)) * (-2 * sin(theta) * (a**2 * r * R * E**2 * cos(theta)
-                         + L**2 * cot(theta) * csc(theta)**3 * Delta(r)) * Sigma(r,theta) + (a * (L * (a * L - 2 * r * R * E) 
-                         + a * r * R * E**2 * sin(theta)**2) - Delta(r) * (p_theta**2 + L**2 * csc(theta)**2 + p_r**2 * Delta(r))) * dSigmadtheta(theta)))
-                    return [f1,f2,f3,f4,f5]
+                         + 2 * r * E * Sigma(r,theta)) + (a * (a * L**2 - 2 * L * r * R * E + a * r * R * (E**2)
+                         * sin(theta)**2) + (p_r ** 2) * Delta(r)**2 + (a**2 + r**2) * (E**2) * Sigma(r,theta)) 
+                         * dDeltadr(r)) + Delta(r) * (a * (L * (a * L - 2 * r * R * E) + a * r * R * (E**2) * sin(theta)**2) 
+                         - Delta(r) * (p_theta**2 + (L**2) * csc(theta)**2 + (p_r**2) * Delta(r))) * dSigmadr(r)))
+                    f5 = (- (1 / (2 * Delta(r) * Sigma(r,theta)**2)) * (-2 * sin(theta) * (a**2 * r * R * (E**2) * cos(theta)
+                         + (L**2) * cot(theta) * (csc(theta)**3) * Delta(r)) * Sigma(r,theta) + (a * (L * (a * L - 2 * r * R * E) 
+                         + a * r * R * E**2 * sin(theta)**2) - Delta(r) * (p_theta**2 + (L**2) * csc(theta)**2 + (p_r**2) * Delta(r))) * dSigmadtheta(theta)))
+                    return np.array([f1,f2,f3,f4,f5])
                return f
 
              f = geodesic()
@@ -149,18 +150,18 @@ for j in range(resolution_width):
              k = 0
              Nk = 20000
 
-             while((R < curve[k][0]) and (curve[k][0] < radius_celestial_sphere) and (k < Nk)):
+             while((R < curve[k][0]) and (curve[k][0] < radius_celestial_sphere) and (k < Nk-1)):
                   
                   # valores de coodenadas "limpos"
                   
                   curve[k][1] = curve[k][1] % (2 * pi)
-                  curve[k][2] = curve[k][2] % (2 * pi)
+                  curve[k][2] = curve[k][2] % (2 * pi) # dúvida: por que checa phi?
                   
                   if curve[k][1] > pi:
                        curve[k][1] = 2 * pi - curve[k][1]
                        curve[k][2] = (pi + curve[k][2]) % (2 * pi)
                   
-                  theta = curve[k][1]
+                  # theta = curve[k][1]
 
                   # runge-kutta
                   step = min([stepsize*Delta(r), stepsize])
