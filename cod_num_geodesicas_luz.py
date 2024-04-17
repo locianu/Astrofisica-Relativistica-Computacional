@@ -94,7 +94,7 @@ def Boyer2Cart(r, theta, phi):
      return np.array([x, y, z])
 
 
-# resoluções da tela, em pixels
+# resoluções da tela, em pixels, resolution_height x resolution_width = quantidade de curvas calculadas
 
 resolution_height = 2
 resolution_width = 2
@@ -113,10 +113,6 @@ coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
 
 stepsize = 0.1
 
-# lista vazia para adicionar as curvas
-
-all_curves = []
-
 for j in range(resolution_width):
         for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
           #localização dos pixels na janela observacional
@@ -128,15 +124,14 @@ for j in range(resolution_width):
                w = (-window_width / 2) + (0.01 * window_width) + (j - 1) * window_width / (resolution_width - 1)
 
 
-             #posição inicial da "câmera" e por consequinte das geodésicas (0, r(0), theta(0), phi(0)) 
-             #em coordenadas Boyer-Lindquist
+             # condições iniciais
              r = 70
              theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
              phi = 0
              t_dot = 1 
              phi_dot = ((csc(theta) * w) / (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
 
-             #momento conjugado  
+             # momento conjugado  
              p_r = ((2 * Sigma(r,theta) * (h * (a**2 + r**2) * cos(theta) + r * sqrt(a**2 + r**2) * sin(theta) * distance_from_window))
                     / (sqrt(distance_from_window**2 + h**2 + w**2) * (a**2 + 2 * r**2 + a**2 * cos(2 * theta)) * Delta(r)))
              p_theta = ((2 * Sigma(r,theta) * (-h * r * sin(theta) + sqrt(a**2 + r**2) * cos(theta) * distance_from_window))
@@ -144,7 +139,7 @@ for j in range(resolution_width):
              
              curve = np.array([[r, theta, phi, p_r, p_theta]])
 
-             #quantias conservadas
+             # quantias conservadas
              E = (1 - R / r) * t_dot + (R * a * phi_dot) / r #energia do vetor de killing com respeito ao tempo t
              L = (-(R * a) / r * t_dot + (r**2 + a**2 + (R * a**2) / r) * phi_dot) #momento angular do vetor de killing com respeito a phi
              
@@ -160,10 +155,10 @@ for j in range(resolution_width):
                          + 2 * r * E * Sigma(r,theta)) + (a * (a * L**2 - 2 * L * r * R * E + a * r * R * (E**2)
                          * sin(theta)**2) + (p_r ** 2) * Delta(r)**2 + (a**2 + r**2) * (E**2) * Sigma(r,theta)) 
                          * dDeltadr(r)) + Delta(r) * (a * (L * (a * L - 2 * r * R * E) + a * r * R * (E**2) * sin(theta)**2) 
-                         - Delta(r) * (p_theta**2 + (L**2) * csc(theta)**2 + (p_r**2) * Delta(r))) * dSigmadr(r)))
+                         - Delta(r) * (p_theta**2 + (L**2) * csc(theta)**2 + (p_r**2) * Delta(r))) * dSigmadr(r))) #ok
                     f5 = (- (1 / (2 * Delta(r) * Sigma(r,theta)**2)) * (-2 * sin(theta) * (a**2 * r * R * (E**2) * cos(theta)
                          + (L**2) * cot(theta) * (csc(theta)**3) * Delta(r)) * Sigma(r,theta) + (a * (L * (a * L - 2 * r * R * E) 
-                         + a * r * R * E**2 * sin(theta)**2) - Delta(r) * (p_theta**2 + (L**2) * csc(theta)**2 + (p_r**2) * Delta(r))) * dSigmadtheta(theta)))
+                         + a * r * R * E**2 * sin(theta)**2) - Delta(r) * (p_theta**2 + (L**2) * csc(theta)**2 + (p_r**2) * Delta(r))) * dSigmadtheta(theta))) #ok
                     return np.array([f1,f2,f3,f4,f5])
                return f
 
@@ -172,22 +167,22 @@ for j in range(resolution_width):
              k = 0
              Nk = 20000
 
-             while((R < curve[k][0]) and (curve[k][0] < radius_celestial_sphere) and (k < Nk-1)):
+             while((R < curve[k, 0]) and (curve[k, 0] < radius_celestial_sphere) and (k < Nk-1)):
                   
                   # valores de coodenadas "limpos"
                   
-                  curve[k][1] = curve[k][1] % (2 * pi)
-                  curve[k][2] = curve[k][2] % (2 * pi) # dúvida: por que checa phi?
+                  curve[k, 1] = curve[k, 1] % (2 * pi)
+                  curve[k, 2] = curve[k, 2] % (2 * pi) # dúvida: por que checa phi?
                   
-                  if curve[k][1] > pi:
-                       curve[k][1] = 2 * pi - curve[k][1]
-                       curve[k][2] = (pi + curve[k][2]) % (2 * pi)
+                  if curve[k, 1] > pi:
+                       curve[k, 1] = 2 * pi - curve[k, 1]
+                       curve[k, 2] = (pi + curve[k, 2]) % (2 * pi)
                   
-                  theta = curve[k][1]
+                  theta = curve[k, 1]
 
                   # runge-kutta
-                  step = min([stepsize*Delta(r), stepsize])
-                                    
+                  step = min([stepsize*Delta(curve[k, 0]), stepsize])
+                  
                   k1 = step * f(r, theta, p_r, p_theta)[0]
                   m1 = step * f(r, theta, p_r, p_theta)[1]
                   n1 = step * f(r, theta, p_r, p_theta)[2]
@@ -220,18 +215,11 @@ for j in range(resolution_width):
                   
                   k = k + 1
 
-                  x_att = np.array([[r,theta,phi,p_r,p_theta]])
+                  x_att = np.array([r, theta, phi, p_r, p_theta])
                   curve = np.vstack((curve, x_att))
-
-             # transforma em coordenadas cartesianas
-             kpep = k
-             k = 0
-             cart = np.array(np.zeros((3, kpep + 1)))
-             cart = np.arange((kpep + 1) * 3, dtype=float).reshape(3, (kpep + 1))
-             while k < kpep + 1:
-               cart[:,k] = Boyer2Cart(curve[k, 0], curve[k, 1], curve[k, 2])
-               k = k + 1
+             cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 2])
              ax.plot(cart[0], cart[1], cart[2])
+
 
 # plotagem
 
