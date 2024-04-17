@@ -15,6 +15,28 @@ radius_celestial_sphere = 80 #raio da esfera celeste
 aDiskMin = 2*R #limite inferior do disco de acreção
 aDiskMAx = 5*R #limite superior
 
+# cria uma figura 3D
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+# cria uma grade de pontos em uma esfera
+
+u = np.linspace(0, 2 * np.pi, 100)
+v = np.linspace(0, np.pi, 100)
+u, v = np.meshgrid(u, v)
+
+x = R * np.cos(u) * np.sin(v)
+y = R * np.sin(u) * np.sin(v)
+z = R * np.cos(v)
+# plota a esfera
+
+ax.plot_surface(x, y, z, color='black', alpha = 1)
+
+# configura a proporção dos eixos para serem iguais
+
+plt.axis('equal')
+ax.set_box_aspect([1,1,1])
+
 #definindo pi para facilitar a vida
 
 pi = math.pi
@@ -74,8 +96,8 @@ def Boyer2Cart(r, theta, phi):
 
 # resoluções da tela, em pixels
 
-resolution_height = 4
-resolution_width = 4
+resolution_height = 2
+resolution_width = 2
 
 # dimensões da janela observacional
 
@@ -126,7 +148,7 @@ for j in range(resolution_width):
              E = (1 - R / r) * t_dot + (R * a * phi_dot) / r #energia do vetor de killing com respeito ao tempo t
              L = (-(R * a) / r * t_dot + (r**2 + a**2 + (R * a**2) / r) * phi_dot) #momento angular do vetor de killing com respeito a phi
              
-             # geodésicas, sistema de EDOs de primeira ordem
+             # geodésicas, sistema de EDOs de primeira ordem, batem com o programa do Rodrigo
              
              def geodesic():
                def f(r, theta, p_r, p_theta):
@@ -161,7 +183,7 @@ for j in range(resolution_width):
                        curve[k][1] = 2 * pi - curve[k][1]
                        curve[k][2] = (pi + curve[k][2]) % (2 * pi)
                   
-                  # theta = curve[k][1]
+                  theta = curve[k][1]
 
                   # runge-kutta
                   step = min([stepsize*Delta(r), stepsize])
@@ -201,39 +223,17 @@ for j in range(resolution_width):
                   x_att = np.array([[r,theta,phi,p_r,p_theta]])
                   curve = np.vstack((curve, x_att))
 
-             # transforma em coordenadas cartesianas  
-             cart = Boyer2Cart(curve[:, 0], curve[:, 1], curve[:, 2])
+             # transforma em coordenadas cartesianas
+             kpep = k
+             k = 0
+             cart = np.array(np.zeros((3, kpep + 1)))
+             cart = np.arange((kpep + 1) * 3, dtype=float).reshape(3, (kpep + 1))
+             while k < kpep + 1:
+               cart[:,k] = Boyer2Cart(curve[k, 0], curve[k, 1], curve[k, 2])
+               k = k + 1
+             ax.plot(cart[0], cart[1], cart[2])
 
-             # adiciona na lista
-             all_curves.append(cart)
 # plotagem
-# cria uma figura 3D
-
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-
-# mostra a figura
-for curve in all_curves:
-     ax.plot3D(curve[:, 0], curve[:, 1], curve[:, 2])
-
-# cria uma grade de pontos em uma esfera
-
-u = np.linspace(0, 2 * np.pi, 100)
-v = np.linspace(0, np.pi, 100)
-u, v = np.meshgrid(u, v)
-
-x = R * np.cos(u) * np.sin(v)
-y = R * np.sin(u) * np.sin(v)
-z = R * np.cos(v)
-# plota a esfera
-
-ax.plot_surface(x, y, z, color='black', alpha = 1)
-
-# configura a proporção dos eixos para serem iguais
-
-plt.axis('equal')
-ax.set_box_aspect([1,1,1])
-
 
 plt.show()
 
