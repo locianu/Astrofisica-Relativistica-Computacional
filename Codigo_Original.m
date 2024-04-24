@@ -3,14 +3,14 @@
 
 plot_type=1;
 
-resolution_height=2; %resolu��es da tela, em pixels 
+resolution_height=2; %resolu��es da tela, em pixels
 resolution_width=2;
 
 tStart=tic;
 
 G=1;
-M=1;  %massa do buraco negro  
-a=0.6;   %momento angular 
+M=1;  %massa do buraco negro
+a=0.6;   %momento angular
 R=2*G*M;
 radius_celestial_sphere=80;
 aDiskMin=2*R;
@@ -90,8 +90,8 @@ for j=1:resolution_width
             +L^2*cot(theta)*csc(theta)^3*Delta(r))*Sigma(r,theta)...
             +(a*(L*(a*L-2*r*R*E)+a*r*R*E^2*sin(theta)^2)-Delta(r)...
             *(p_theta^2+L^2*csc(theta)^2+p_r^2*Delta(r)))*dthetaSigma(theta))];
-        
-        f5=@(r,theta,p_r,p_theta)(a*(-a*L+r*R*E)+L*csc(theta)^2*Delta(r))/(Delta(r)*Sigma(r,theta))
+
+        f5=@(r,theta,p_r,p_theta)(a*(-a*L+r*R*E)+L*csc(theta)^2*Delta(r))/(Delta(r)*Sigma(r,theta));
 
         x_0 = [r theta p_r p_theta phi];
         curve=x_0;
@@ -101,7 +101,7 @@ for j=1:resolution_width
 
         k=1
         Nk=20000
-       
+
         while((R<r)&&(r<radius_celestial_sphere)&&(k<Nk))
             %Clean coordinates values
             curve(k,2)=mod(curve(k,2),2*pi);
@@ -116,7 +116,7 @@ for j=1:resolution_width
             step=min([stepsize*Delta(r);stepsize])
             k1=step*f1(r,theta,p_r,p_theta);
             m1=step*f2(r,theta,p_r,p_theta);
-            n1=step*f3(r,theta,p_r,p_theta); 
+            n1=step*f3(r,theta,p_r,p_theta);
             s1=step*f4(r,theta,p_r,p_theta);
             v1=step*f5(r,theta,p_r,p_theta);
 
@@ -149,8 +149,8 @@ for j=1:resolution_width
 
             x = [r theta p_r p_theta phi];
             curve(k,:)=x;
-            
-   
+
+
 
             %x=[r theta p_r p_theta];
             %disp(x);
@@ -158,13 +158,13 @@ for j=1:resolution_width
             %disp(theta);
             %disp(["k=",k]);
 
-        
+
         end
 
         %Transform to euclidean coordinates and plot3
         [n,m]=size(curve);
         A=a*ones(n,1);
-        
+
         PHIZ=ones(n,1);
 
         Boyer2Cart=@(r,theta,phi)[sqrt(r.^2+A.^2).*sin(theta).*cos(phi),...
@@ -174,24 +174,24 @@ for j=1:resolution_width
         cart=Boyer2Cart(curve(:,1),curve(:,2),curve(:,5));
 %         disp([i,j]);
 %         pause;
-      
+
 %         formatSpec = '%4.2f \t %4.2f \t %4.2f\n';
 %         filename = sprintf('plot%d.txt', fig);
 %         fileID = fopen(filename,'w');
 %         fprintf(fileID,formatSpec,cart(:,1),cart(:,2),cart(:,3));  % The format string is applied to each element of a
 %         fclose(fileID);
 %         fig = fig+1
-        
-       
+
+
         plot3(cart(:,1),cart(:,2),cart(:,3))
         hold on
-        
-        
+
+
 %         filename = sprintf('plot%d.png', fig);
 %         saveas(figi, filename);
 %         fig = fig+1;
          hold on;
-       
+
 
    end
 end

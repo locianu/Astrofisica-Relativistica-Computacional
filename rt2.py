@@ -99,9 +99,11 @@ while j<rw:
       f2=step*f(x1+(1/2.)*f1[0],x2+(1/2.)*f1[1],x4+(1/2.)*f1[3],x5+(1/2.)*f1[4])
       f3=step*f(x1+(1/2.)*f2[0],x2+(1/2.)*f2[1],x4+(1/2.)*f2[3],x5+(1/2.)*f2[4])
       f4=step*f(x1+f3[0],x2+f3[1],x4+f3[3],x5+f3[4])
-      z=np.array([x1+(1/6.)*(f1[0]+2*f2[0]+2*f3[0]+f4[0]),x2+(1/6.)*(f1[1]+2*f2[1]\
-+2*f3[1]+f4[1]),x3+(1/6.)*(f1[2]+2*f2[2]+2*f3[2]+f4[2]),x4+(1/6.)\
-*(f1[3]+2*f2[3]+2*f3[3]+f4[3]),x5+(1/6.)*(f1[4]+2*f2[4]+2*f3[4]+f4[4])])
+      z=np.array([x1+(1/6.)*(f1[0]+2*f2[0]+2*f3[0]+f4[0]),
+                  x2+(1/6.)*(f1[1]+2*f2[1]+2*f3[1]+f4[1]),
+                  x3+(1/6.)*(f1[2]+2*f2[2]+2*f3[2]+f4[2]),
+                  x4+(1/6.)*(f1[3]+2*f2[3]+2*f3[3]+f4[3]),
+                  x5+(1/6.)*(f1[4]+2*f2[4]+2*f3[4]+f4[4])])
       return z
   #Resolvendo por RK4
   #parametros
@@ -142,7 +144,7 @@ while j<rw:
    # ~ ax.plot_wireframe(cart[0], cart[1], cart[2])
    ax.plot(cart[0], cart[1], cart[2])
 
-  else:
+"""  else:
    k=0
    ptd=0
    #Curvas computadas na esfera celestial onde ela existe
@@ -167,7 +169,7 @@ while j<rw:
    if 1.2*R<curve[k,0]:
     cnDisk[i,j,:]=np.array([curve[k,1],curve[k,2],0])
    else:
-    cnDisk[i,j,:]=np.array([curve[k,1],curve[k,2],1])
+    cnDisk[i,j,:]=np.array([curve[k,1],curve[k,2],1])"""
 plt.axis('square')
 plt.show()
 
