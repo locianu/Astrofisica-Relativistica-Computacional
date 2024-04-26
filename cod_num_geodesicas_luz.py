@@ -1,7 +1,25 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
+
+# resoluções da tela, em pixels, resolution_height x resolution_width = quantidade de curvas calculadas
+
+resolution_height = 2
+resolution_width = 2
+
+# dimensões da janela observacional
+
+window_height = 0.00001 #h_P
+window_width = (resolution_width / resolution_height) * window_height #w_P
+distance_from_window = -2*0.00007 #d_P
+
+# coordenadas para mapeamento
+coords_no_aDisk = np.zeros((resolution_height, resolution_width, 3))
+coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
+
+# passo do runge-kunta 4
+
+stepsize = 0.01
 
 #dados e equações relevantes pra métrica
 
@@ -95,26 +113,6 @@ def Boyer2Cart(r, theta, phi):
      z = r * cos(theta)
      return np.array([x, y, z])
 
-
-# resoluções da tela, em pixels, resolution_height x resolution_width = quantidade de curvas calculadas
-
-resolution_height = 2
-resolution_width = 2
-
-# dimensões da janela observacional
-
-window_height = 0.00001 #h_P
-window_width = (resolution_width / resolution_height) * window_height #w_P
-distance_from_window = -2*0.00007 #d_P
-
-# coordenadas para mapeamento
-coords_no_aDisk = np.zeros((resolution_height, resolution_width, 3))
-coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
-
-# passo do runge-kunta 4
-
-stepsize = 0.01
-
 for j in range(resolution_width):
      for i in range(resolution_height): #(i,j) é a localização de um pixel na imagem dada
      #localização dos pixels na janela observacional
@@ -127,9 +125,9 @@ for j in range(resolution_width):
 
 
           # condições iniciais
-          r = 70
+          r = 30
           theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
-          phi = 0
+          phi = pi / 2
           t_dot = 1 
           phi_dot = ((csc(theta) * w) / (sqrt((a**2 + r**2) * (distance_from_window**2 + w**2 + h**2))))
 
