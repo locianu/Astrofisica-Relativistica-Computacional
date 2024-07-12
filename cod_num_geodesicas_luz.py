@@ -11,7 +11,7 @@ resolution_width = 2
 
 window_height = 0.00001 #h_P
 window_width = (resolution_width / resolution_height) * window_height #w_P
-distance_from_window = -2*0.00007 #d_P
+distance_from_window = -1.5e-4 #d_P
 
 # coordenadas para mapeamento
 coords_no_aDisk = np.zeros((resolution_height, resolution_width, 3))
@@ -19,13 +19,13 @@ coords_aDisk = np.zeros((resolution_height,resolution_width, 3))
 
 # passo do runge-kunta 4
 
-stepsize = 0.01
+stepsize = 0.1
 
 #dados e equações relevantes pra métrica
 
 G = 1 #constante gravitacional
 M = 1 #massa do buraco negro
-a = 0.99999 #momento angular por massa a = J (Mc)^-1, J é o momento angular, também chamado de "parâmetro de Kerr"
+a = 0.99 #momento angular por massa a = J (Mc)^-1, J é o momento angular, também chamado de "parâmetro de Kerr"
 c = 1 #velocidade da luz
 R = 2*G*M / c**2 #raio de Schwarzschild
 radius_celestial_sphere = 80 #raio da esfera celeste
@@ -51,11 +51,6 @@ z = R * np.outer(np.ones(np.size(u)), np.cos(v))
 # plota a esfera
 
 ax.plot_surface(x, y, z, rstride=4, cstride=4, color='black')
-
-# configura a proporção dos eixos para serem iguais
-
-plt.axis('square')
-#ax.set_box_aspect([1,1,1])
 
 
 # funções matemáticas
@@ -125,7 +120,7 @@ for j in range(resolution_width):
 
 
           # condições iniciais
-          r = 30
+          r = 70
           theta = pi / 2 - pi / 46 # deslocando o buraco negro para visualização com o aDisk (disco de acreção?)
           phi = pi / 2
           t_dot = 1 
@@ -197,8 +192,10 @@ for j in range(resolution_width):
           for i in range(len(curve)):
                cart[:, i] = Boyer2Cart(curve[i, 0], curve[i, 1], curve[i, 2])
           ax.plot(cart[0], cart[1], cart[2])
+# configura a proporção dos eixos para serem iguais
+
+plt.axis('square')
 
 # plotagem
-print(f'curve.size = {curve.size} curve.shape = {curve.shape}')
 plt.show()
 
