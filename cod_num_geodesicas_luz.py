@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import csv
+import skimage # para transformações, mudar o código lá em baixo
 from PIL import Image
 
 # resoluções da tela, em pixels, resolution_height x resolution_width = quantidade de curvas calculadas
 
-resolution_height = 4
-resolution_width = 4
+resolution_height = 32
+resolution_width = 32
 
 # dimensões da janela observacional
 
@@ -164,7 +164,7 @@ for j in range(resolution_width):
           curve[0] = x0
           
           # define o tipo de plot
-          plot_type = 1
+          plot_type = 0
 
           match plot_type:
                case 1:
@@ -193,8 +193,6 @@ for j in range(resolution_width):
                          
                          x_att = np.array([r, theta, phi, p_r, p_theta])               
                          curve[k] = x_att          
-                         if k == 1:
-                              print('ainda estou rodando!')
                     curve = curve[:k]
                     cart = np.zeros((3, len(curve)))
                     for i in range(len(curve)):
@@ -204,9 +202,9 @@ for j in range(resolution_width):
                case 0:
                     passed_through_ADisk = 0
 
-                    while 1.2 * R < curve[k, 0] and curve[k, 0] < radius_celestial_sphere and k < Nk:
+                    while 1.2 * R < curve[0, 0] and curve[0, 0] < radius_celestial_sphere and k < Nk:
                          # runge-kutta
-                         temp_curve_step = min([stepsize*Delta(curve[k, 0]), stepsize])
+                         temp_curve_step = min([stepsize*Delta(curve[0, 0]), stepsize])
                          k1 = temp_curve_step * f(r, theta, p_r, p_theta)
                          k2 = temp_curve_step * f(r + 0.5 * k1[0], theta + 0.5 * k1[1], p_r + 0.5 * k1[3], p_theta + 0.5 * k1[4])
                          k3 = temp_curve_step * f(r + 0.5 * k2[0], theta + 0.5 * k2[1], p_r + 0.5 * k2[3], p_theta + 0.5 * k2[4])
@@ -239,10 +237,12 @@ for j in range(resolution_width):
                          
                          k = k + 1
                     
-                         if (1.2 * R) < curve[k, 0]:
-                              coords_no_aDisk[i, j, :] = np.array([curve[k, 1], curve[k, 2], 0])
+                         if (1.2 * R) < curve[0, 0]:
+                              coords_no_aDisk[i, j, :] = np.array([curve[0, 1], curve[0, 2], 0])
+                              print(coords_no_aDisk)
                          else:
-                              coords_no_aDisk[i, j, :] = np.array([curve[k, 1], curve[k, 2], 1])
+                              coords_no_aDisk[i, j, :] = np.array([curve[0, 1], curve[0, 2], 1])
+                              print(coords_no_aDisk)
 # configura a proporção dos eixos para serem iguais
 print("acabei de rodar!")
 
@@ -291,11 +291,13 @@ print(celestial_scene_array.shape)
 print(celestial_scene_height_res)
 print(celestial_scene_width_res)
 
+# iniciando a imagem gerada como uma matriz de zeros, totalmente preta
 IMG = np.zeros((resolution_height, resolution_width, 3), dtype = np.uint8)
 
 print(IMG.shape) 
 print(IMG.dtype)
 
+batch_size = 100
 for j in range(resolution_width):
      for i in range(resolution_height):
           if image_type_w_disk == 1:
